@@ -17,10 +17,31 @@ public class Connector extends Thread
 
     private Connector target;
 
+    private boolean canOrder = false;
+
     Connector(Socket s, Connector target) throws IOException
     {
         this.target = target;
         this.socket = s;
+
+        input = new DataInputStream(socket.getInputStream());
+        output = new DataOutputStream(socket.getOutputStream());
+
+        if(!checkConnection())
+        {
+            System.out.println("BAD SYSTEM TRIED TO CONNECT : "+socket.getInetAddress().toString());
+            socket.close();
+            return;
+        }
+
+        this.start();
+    }
+
+    Connector(Socket s, Connector target, boolean canOrder) throws IOException
+    {
+        this.target = target;
+        this.socket = s;
+        this.canOrder = canOrder;
 
         input = new DataInputStream(socket.getInputStream());
         output = new DataOutputStream(socket.getOutputStream());
@@ -64,7 +85,7 @@ public class Connector extends Thread
                 String s = new String(in);
                 s = s.replace("\0", "");
 
-                if(target != null && target.isConnected())
+                if(target != null && target.isConnected() && !specialTreatment(s))
                 {
                     target.write(s.getBytes());
                 }
@@ -101,5 +122,12 @@ public class Connector extends Thread
     public void setTarget(Connector s)
     {
         this.target = s;
+    }
+
+    private boolean specialTreatment(String order)
+    {
+        if(!canOrder) return false;
+        //TODO
+        return false;
     }
 }

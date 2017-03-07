@@ -53,7 +53,7 @@ public class Main
             if(client == null || !client.isConnected())
             {
                 try {
-                    client = new Connector(clientS.accept(), intechos);
+                    client = new Connector(clientS.accept(), intechos, true);
                     intechos.setTarget(client);
                     System.out.println("Client connected.");
                 } catch (IOException e) {
