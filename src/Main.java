@@ -1,22 +1,25 @@
+import org.freedesktop.gstreamer.Gst;
+
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
+
 
 public class Main
 {
 
     private static Connector client;
-
     private static Connector intechos;
 
     private static ServerSocket clientS;
-    private final static int clientPort=56987;
+    private final static int clientPort=  56987;
 
     private static ServerSocket intechosS;
-    private final static int intechosPort=56990;
+    private final static int intechosPort= 56990;
 
     public static void main(String[] args) throws InterruptedException
     {
+        Gst.init("MotorDaemonManager",args);
+
         while (true)
         {
             if(intechosS == null)
@@ -32,6 +35,7 @@ public class Main
             if(intechos == null || !intechos.isConnected())
             {
                 try {
+                    System.out.println("Waiting for INTechOS");
                     intechos = new Connector(intechosS.accept(), null);
                     System.out.println("INTechOS connected.");
                 } catch (IOException e) {
@@ -53,6 +57,7 @@ public class Main
             if(client == null || !client.isConnected())
             {
                 try {
+                    System.out.println("Waiting for client");
                     client = new Connector(clientS.accept(), intechos, true);
                     intechos.setTarget(client);
                     System.out.println("Client connected.");

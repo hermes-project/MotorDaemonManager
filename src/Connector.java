@@ -1,3 +1,7 @@
+import org.freedesktop.gstreamer.Bin;
+import org.freedesktop.gstreamer.Bus;
+import org.freedesktop.gstreamer.Pipeline;
+
 import java.io.*;
 
 import java.net.Socket;
@@ -16,6 +20,10 @@ public class Connector extends Thread
 
     private Connector target;
 
+    private boolean connected = false;
+
+    Pipeline pipe = new Pipeline();
+
     private boolean canOrder = false;
 
     Connector(Socket s, Connector target) throws IOException
@@ -33,6 +41,7 @@ public class Connector extends Thread
             return;
         }
 
+        connected = true;
         this.start();
     }
 
@@ -52,15 +61,17 @@ public class Connector extends Thread
             return;
         }
 
+        connected = true;
         this.start();
     }
 
     private synchronized boolean checkConnection()
     {
-        byte[] b = new byte[11];
+        byte[] b = new byte[1024];
 
         try {
-            input.readFully(b);
+            input.read(b);
+
             String s = new String(b);
 
             return s.contains("motordaemon");
@@ -74,12 +85,14 @@ public class Connector extends Thread
     @Override
     public void run()
     {
-        while(socket.isConnected())
+        while(socket.isConnected() && connected)
         {
             try
             {
                 byte[] in = new byte[1024];
                 int rbytes = input.read(in);
+
+                if(rbytes < 0) throw new IOException();
 
                 String s = new String(in);
                 s = s.replace("\0", "");
@@ -94,17 +107,26 @@ public class Connector extends Thread
                 e.printStackTrace();
                 try {
                     socket.close();
+                    pipe.stop();
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
+                connected = false;
                 return;
             }
         }
+        pipe.stop();
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        connected = false;
     }
 
     public boolean isConnected()
     {
-        return socket.isConnected();
+        return socket.isConnected() && connected;
     }
 
     public synchronized void write(byte[] b)
@@ -139,6 +161,23 @@ public class Connector extends Thread
             double gotoA = Double.parseDouble(args[3]);
 
             //TODO call to PF & followpath
+
+            return true;
+        }
+
+        else if(order.contains("startwebcamera"))
+        {
+            String[] args = order.split(" ");
+            if(args.length != 2) return true;
+
+            target.send("startcamera");
+
+            pipe = new Pipeline();
+            Bin bin = Bin.launch("udpsrc port=56988 ! application/x-rtp, media=video, encoding-name=JPEG, clock-rate=90000, payload=26 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! timeoverlay ! videoconvert ! vp8enc error-resilient=1 ! rtpvp8pay ! udpsink host="+args[1]+" port=5004",true);
+            pipe.add(bin);
+            Bus bus = pipe.getBus();
+            bus.connect((Bus.MESSAGE) (arg0, arg1) -> System.out.println(arg1.getStructure()));
+            pipe.play();
 
             return true;
         }
