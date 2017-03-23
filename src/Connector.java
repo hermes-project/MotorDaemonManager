@@ -1,6 +1,7 @@
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Pipeline;
+import snmp.SNMPAgent;
 
 import java.io.*;
 
@@ -85,12 +86,24 @@ public class Connector extends Thread
     @Override
     public void run()
     {
+        if(!canOrder)
+        {
+            SNMPUpdater updater = new SNMPUpdater(this);
+            updater.start();
+        }
+
         while(socket.isConnected() && connected)
         {
             try
             {
                 byte[] in = new byte[1024];
-                int rbytes = input.read(in);
+
+                int rbytes;
+
+                synchronized (this)
+                {
+                    rbytes = input.read(in);
+                }
 
                 if(rbytes < 0) throw new IOException();
 
@@ -235,5 +248,10 @@ public class Connector extends Thread
         }
 
         return out;
+    }
+
+    public boolean isUp()
+    {
+        return socket.isConnected() && connected;
     }
 }

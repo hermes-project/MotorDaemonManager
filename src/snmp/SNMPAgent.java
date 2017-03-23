@@ -9,6 +9,7 @@ import org.snmp4j.agent.CommandProcessor;
 import org.snmp4j.agent.DuplicateRegistrationException;
 import org.snmp4j.agent.MOGroup;
 import org.snmp4j.agent.ManagedObject;
+import org.snmp4j.agent.mo.MOScalar;
 import org.snmp4j.agent.mo.MOTableRow;
 import org.snmp4j.agent.mo.snmp.RowStatus;
 import org.snmp4j.agent.mo.snmp.SnmpCommunityMIB;
@@ -170,9 +171,22 @@ public class SNMPAgent extends BaseAgent {
     public void registerManagedObject(ManagedObject mo) {
         try {
             server.register(mo, null);
+
         } catch (DuplicateRegistrationException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /**
+     * Update a MO
+     */
+    public void updateManagedObject(MOScalar mo)
+    {
+        ManagedObject old = server.getManagedObject(mo.getID(), null, false);
+
+        server.unregister(old, null);
+
+        registerManagedObject(mo);
     }
 
     public void unregisterManagedObject(MOGroup moGroup) {

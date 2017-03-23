@@ -62,8 +62,9 @@ public class TestSNMP {
 
         // Register a system description, use one from you product environment
         // to test with
-        agent.registerManagedObject(MOCreator.createReadOnly(sysDescr,
-                "SUUS !"));
+        agent.registerManagedObject(MOCreator.createReadOnly(sysDescr, "SUUS !"));
+
+        agent.updateManagedObject(MOCreator.createReadOnly(sysDescr, "SUUS UPDATED !"));
 
         // Setup the client to use our newly started agent
       //  client = new SNMPManager("udp:127.0.0.1/8079");
