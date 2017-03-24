@@ -173,7 +173,7 @@ public class Connector extends Thread
             target.send("startcamera");
 
             pipe = new Pipeline();
-            Bin bin = Bin.launch("udpsrc port=56988 ! application/x-rtp, media=video, encoding-name=JPEG, clock-rate=90000, payload=26 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! timeoverlay ! videoconvert ! vp8enc error-resilient=1 ! rtpvp8pay ! udpsink host="+args[1]+" port=5004",true);
+            Bin bin = Bin.launch("udpsrc port=56988 ! application/x-rtp, media=video, encoding-name=JPEG, clock-rate=90000, payload=26 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! timeoverlay ! videorate ! video/x-raw,framerate=15/1 ! videoconvert ! vp8enc cpu-used=16 end-usage=vbr target-bitrate=100000 token-partitions=3 static-threshold=1000 min-quantizer=0 max-quantizer=63 threads=2 error-resilient=1 ! rtpvp8pay ! udpsink host="+args[1]+" port=5004",true);
             pipe.add(bin);
             Bus bus = pipe.getBus();
             bus.connect((Bus.MESSAGE) (arg0, arg1) -> System.out.println(arg1.getStructure()));
