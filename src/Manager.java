@@ -1,11 +1,16 @@
 import org.freedesktop.gstreamer.Gst;
+import snmp.MDMIB;
+import snmp.SNMPAgent;
+import snmp.SNMPWrapper;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 
 
-public class Main
+public class Manager
 {
+
+    private static SNMPAgent snmpAgent;
 
     private static Connector client;
     private static Connector intechos;
@@ -16,9 +21,24 @@ public class Main
     private static ServerSocket intechosS;
     private final static int intechosPort= 56990;
 
+    private final static int snmpPort=56991;
+
     public static void main(String[] args) throws InterruptedException
     {
         Gst.init("MotorDaemonManager",args);
+
+        try
+        {
+            Manager.snmpAgent =  new SNMPAgent("0.0.0.0/"+Integer.toString(snmpPort));
+            Manager.snmpAgent.start();
+            Manager.snmpAgent.unregisterManagedObject(Manager.snmpAgent.getSnmpv2MIB());
+            SNMPWrapper.initMIB(Manager.snmpAgent);
+        }
+        catch (IOException e)
+        {
+            System.err.println("ERROR : Could not launch SNMP agent on port "+Integer.toString(snmpPort));
+            e.printStackTrace();
+        }
 
         while (true)
         {
@@ -35,9 +55,11 @@ public class Main
             if(intechos == null || !intechos.isConnected())
             {
                 try {
+                    SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.STATE, "false");
                     System.out.println("Waiting for INTechOS");
                     intechos = new Connector(intechosS.accept(), null);
                     System.out.println("INTechOS connected.");
+                    SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.STATE, "true");
                 } catch (IOException e) {
                     e.printStackTrace();
                     continue;
