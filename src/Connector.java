@@ -7,13 +7,16 @@ import java.io.*;
 
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Class representing any system connected to the manager
  */
 public class Connector extends Thread
 {
-    private Socket socket;
+    private final String mutex = "mutex";
+
+    private Socket socket = null;
 
     private DataInputStream input;
 
@@ -27,26 +30,12 @@ public class Connector extends Thread
 
     private boolean canOrder = false;
 
-    Connector(Socket s, Connector target) throws IOException
+    Connector()
     {
-        this.target = target;
-        this.socket = s;
-
-        input = new DataInputStream(socket.getInputStream());
-        output = new DataOutputStream(socket.getOutputStream());
-
-        if(!checkConnection())
-        {
-            System.out.println("BAD SYSTEM TRIED TO CONNECT : "+socket.getInetAddress().toString());
-            socket.close();
-            return;
-        }
-
-        connected = true;
-        this.start();
+        //Empty constructor, fo' sho'
     }
 
-    Connector(Socket s, Connector target, boolean canOrder) throws IOException
+    synchronized void setInfos(Socket s, Connector target, boolean canOrder) throws IOException
     {
         this.target = target;
         this.socket = s;
@@ -68,6 +57,8 @@ public class Connector extends Thread
 
     private synchronized boolean checkConnection()
     {
+        if(socket == null) return false;
+
         byte[] b = new byte[1024];
 
         try {
@@ -86,11 +77,11 @@ public class Connector extends Thread
     @Override
     public void run()
     {
-        if(!canOrder)
+       /* if(!canOrder)
         {
             SNMPUpdater updater = new SNMPUpdater(this);
             updater.start();
-        }
+        }*/
 
         while(socket.isConnected() && connected)
         {
@@ -100,7 +91,7 @@ public class Connector extends Thread
 
                 int rbytes;
 
-                synchronized (this)
+                synchronized (mutex)
                 {
                     rbytes = input.read(in);
                 }
@@ -135,22 +126,26 @@ public class Connector extends Thread
             e.printStackTrace();
         }
         connected = false;
+        socket = null;
     }
 
     public boolean isConnected()
     {
-        return socket.isConnected() && connected;
+        return socket != null && socket.isConnected() && connected;
     }
 
     public synchronized void write(byte[] b)
     {
-        if(!socket.isConnected()) return;
+        if(socket == null || !socket.isConnected()) return;
 
-        try {
-            output.write(b);
-            output.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        synchronized (mutex)
+        {
+            try {
+                output.write(b);
+                output.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -165,6 +160,8 @@ public class Connector extends Thread
 
         if(order.contains("goto"))
         {
+            if(!target.isConnected()) return true;
+
             Double[] pos = target.getPosition();
 
             String[] args = order.split(" ");
@@ -178,19 +175,31 @@ public class Connector extends Thread
             return true;
         }
 
+        else if(order.contains("motordaemonstatus"))
+        {
+            write((Boolean.toString(target.isConnected())+"\r\n").getBytes());
+            return true;
+        }
+
         else if(order.contains("startwebcamera"))
         {
+            if(!target.isConnected()) return true;
+
+            System.out.println("Starting WEB Camera for Janus");
+
             String[] args = order.split(" ");
             if(args.length != 2) return true;
 
             target.send("startcamera");
 
             pipe = new Pipeline();
-            Bin bin = Bin.launch("udpsrc port=56988 ! application/x-rtp, media=video, encoding-name=JPEG, clock-rate=90000, payload=26 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! timeoverlay ! videorate ! video/x-raw,framerate=15/1 ! videoconvert ! vp8enc cpu-used=16 end-usage=vbr target-bitrate=100000 token-partitions=3 static-threshold=1000 min-quantizer=0 max-quantizer=63 threads=2 error-resilient=1 ! rtpvp8pay ! udpsink host="+args[1]+" port=5004",true);
+            Bin bin = Bin.launch("udpsrc port=56988 ! application/x-rtp, media=video, encoding-name=JPEG, clock-rate=90000, payload=26 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! timeoverlay ! videorate ! video/x-raw,framerate=20/1 ! videoconvert ! vp8enc cpu-used=16 end-usage=vbr target-bitrate=100000 token-partitions=3 static-threshold=1000 min-quantizer=0 max-quantizer=63 threads=2 error-resilient=1 ! rtpvp8pay ! udpsink host="+args[1]+" port=5004",true);
             pipe.add(bin);
             Bus bus = pipe.getBus();
             bus.connect((Bus.MESSAGE) (arg0, arg1) -> System.out.println(arg1.getStructure()));
             pipe.play();
+
+            Manager.videoOn = true;
 
             return true;
         }
@@ -200,6 +209,8 @@ public class Connector extends Thread
 
     public Double[] getPosition()
     {
+        if(socket == null || !socket.isConnected()) return null;
+
         String[] sl = sendAndReceive("p", 1);
 
         if(sl == null) return null;
@@ -215,43 +226,51 @@ public class Connector extends Thread
 
     public synchronized void send(String s)
     {
-        try {
-            byte[] r = Arrays.copyOfRange(s.getBytes(), 0, 1024);
+        if(socket == null || !socket.isConnected()) return;
 
-            output.write(r);
-            output.flush();
+        synchronized (mutex)
+        {
+            try {
+                byte[] r = Arrays.copyOfRange(s.getBytes(), 0, 1024);
 
-            Thread.sleep(20);
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
+
+                output.write(r);
+                output.flush();
+
+                Thread.sleep(20);
+            } catch (IOException|InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
     public synchronized String[] sendAndReceive(String toSend, int numberOfLines)
     {
-        send(toSend);
+        synchronized (mutex)
+        {
+            send(toSend);
 
-        String[] out = new String[numberOfLines];
+            if(numberOfLines <= 0) return new String[0];
 
-        try {
+            String[] out = new String[numberOfLines];
 
-            BufferedReader iss = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            try {
 
-            for(int i=0 ; i<numberOfLines ; i++)
-            {
-                out[i] = iss.readLine().replace("\0","");
-                Thread.sleep(20);
+                BufferedReader iss = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                for(int i=0 ; i<numberOfLines ; i++)
+                {
+                    out[i] = iss.readLine().replace("\0","");
+                    Thread.sleep(20);
+                }
+
+            } catch (IOException|InterruptedException e) {
+                e.printStackTrace();
             }
-
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
+            return out;
         }
 
-        return out;
     }
 
-    public boolean isUp()
-    {
-        return socket.isConnected() && connected;
-    }
 }

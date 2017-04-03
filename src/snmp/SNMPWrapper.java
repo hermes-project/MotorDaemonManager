@@ -24,5 +24,6 @@ public class SNMPWrapper
         agent.registerManagedObject(MOCreator.createReadOnly(new OID(MDMIB.RAM_USED.getOid()), "Unknown"));
         agent.registerManagedObject(MOCreator.createReadOnly(new OID(MDMIB.RAM_TOTAL.getOid()), "Unknown"));
         agent.registerManagedObject(MOCreator.createReadOnly(new OID(MDMIB.SPEED.getOid()), "Unknown"));
+        agent.registerManagedObject(MOCreator.createReadOnly(new OID(MDMIB.ANGLE.getOid()), "0"));
     }
 }
