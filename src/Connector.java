@@ -77,11 +77,11 @@ public class Connector extends Thread
     @Override
     public void run()
     {
-       /* if(!canOrder)
+        if(!canOrder)
         {
             SNMPUpdater updater = new SNMPUpdater(this);
             updater.start();
-        }*/
+        }
 
         while(socket.isConnected() && connected)
         {
