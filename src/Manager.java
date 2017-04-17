@@ -29,10 +29,14 @@ public class Manager
 
         try
         {
+            System.out.println("Starting SNMP Agent ..");
             Manager.snmpAgent =  new SNMPAgent("0.0.0.0/"+Integer.toString(snmpPort));
+            System.out.println("Starting SNMP Agent ...");
             Manager.snmpAgent.start();
+            System.out.println("Successfully started SNMP Agent !");
             Manager.snmpAgent.unregisterManagedObject(Manager.snmpAgent.getSnmpv2MIB());
             SNMPWrapper.initMIB(Manager.snmpAgent);
+            System.out.println("Successfully configured !");
         }
         catch (IOException e)
         {
