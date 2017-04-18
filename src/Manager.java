@@ -1,5 +1,12 @@
+import org.apache.log4j.PropertyConfigurator;
 import org.freedesktop.gstreamer.Gst;
+import org.snmp4j.asn1.BER;
+import org.snmp4j.log.Log4jLogFactory;
+import org.snmp4j.log.LogFactory;
+import org.snmp4j.log.LogLevel;
+import org.snmp4j.smi.OID;
 import snmp.MDMIB;
+import snmp.MOCreator;
 import snmp.SNMPAgent;
 import snmp.SNMPWrapper;
 
@@ -23,11 +30,19 @@ public class Manager
 
     private final static int snmpPort=56991;
 
+    static final OID sysDescr = new OID("1.3.6.1.2.1.1.1.0");
+
     static boolean videoOn = false;
 
     public static void main(String[] args) throws InterruptedException
     {
         Gst.init("MotorDaemonManager",args);
+
+        LogFactory.setLogFactory(new Log4jLogFactory());
+        PropertyConfigurator.configure("log4j.properties");
+        BER.setCheckSequenceLength(false);
+
+        LogFactory.getLogFactory().getRootLogger().setLogLevel(LogLevel.DEBUG);
 
         client = new Connector();
         intechos = new Connector();
@@ -40,6 +55,8 @@ public class Manager
             Manager.snmpAgent.start();
             System.out.println("Successfully started SNMP Agent !");
             Manager.snmpAgent.unregisterManagedObject(Manager.snmpAgent.getSnmpv2MIB());
+            Manager.snmpAgent.registerManagedObject(MOCreator.createReadOnly(sysDescr, "MotorDaemonManager"));
+
             SNMPWrapper.initMIB(Manager.snmpAgent);
             System.out.println("Successfully configured !");
         }

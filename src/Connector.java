@@ -24,6 +24,10 @@ public class Connector extends Thread
 
     private Connector target;
 
+    private boolean started = false;
+
+    private String status = "";
+
     private boolean connected = false;
 
     Pipeline pipe = new Pipeline();
@@ -32,7 +36,7 @@ public class Connector extends Thread
 
     Connector()
     {
-        //Empty constructor, fo' sho'
+        this.start();
     }
 
     synchronized void setInfos(Socket s, Connector target, boolean canOrder) throws IOException
@@ -52,7 +56,7 @@ public class Connector extends Thread
         }
 
         connected = true;
-        this.start();
+        started = true;
     }
 
     private synchronized boolean checkConnection()
@@ -77,61 +81,77 @@ public class Connector extends Thread
     @Override
     public void run()
     {
-        if(!canOrder)
+        while(true)
         {
-            SNMPUpdater updater = new SNMPUpdater(this);
-            updater.start();
-        }
-
-        while(socket.isConnected() && connected)
-        {
-            try
+            if(!started)
             {
-                byte[] in = new byte[1024];
-
-                int rbytes;
-
-                synchronized (mutex)
-                {
-                    rbytes = input.read(in);
-                }
-
-                if(rbytes < 0) throw new IOException();
-
-                String s = new String(in);
-                s = s.replace("\0", "");
-
-                if(target != null && target.isConnected() && !specialTreatment(s))
-                {
-                    target.write(s.getBytes());
-                }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
                 try {
-                    socket.close();
-                    pipe.stop();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                connected = false;
-                return;
+                continue;
             }
+
+            if(!canOrder)
+            {
+                SNMPUpdater updater = new SNMPUpdater(this);
+                updater.start();
+            }
+
+            while(socket.isConnected() && connected)
+            {
+                try
+                {
+                    byte[] in = new byte[1024];
+
+                    int rbytes;
+
+                    //synchronized (mutex)
+                    //{
+                        rbytes = input.read(in);
+                    //}
+
+                    if(rbytes < 0) throw new IOException();
+
+                    String s = new String(in);
+                    s = s.replace("\0", "");
+
+                    if(specialTreatment(s)) continue;
+
+                    if(target != null && target.isConnected())
+                    {
+                        target.write(s.getBytes());
+                    }
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                    try {
+                        socket.close();
+                        pipe.stop();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    connected = false;
+                    started = false;
+                }
+            }
+            pipe.stop();
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            connected = false;
+            socket = null;
+            started = false;
         }
-        pipe.stop();
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        connected = false;
-        socket = null;
     }
 
     public boolean isConnected()
     {
-        return socket != null && socket.isConnected() && connected;
+        return socket != null && socket.isConnected() && connected && started;
     }
 
     public synchronized void write(byte[] b)
@@ -156,7 +176,7 @@ public class Connector extends Thread
 
     private boolean specialTreatment(String order)
     {
-        if(!canOrder) return false;
+        if(!canOrder && !order.contains("MDSTATUS")) return false;
 
         if(order.contains("goto"))
         {
@@ -178,6 +198,12 @@ public class Connector extends Thread
         else if(order.contains("motordaemonstatus"))
         {
             write((Boolean.toString(target.isConnected())+"\r\n").getBytes());
+            return true;
+        }
+
+        else if(order.contains("MDSTATUS"))
+        {
+            status =  order.replaceAll("MDSTATUS", "");
             return true;
         }
 
@@ -271,6 +297,25 @@ public class Connector extends Thread
             return out;
         }
 
+    }
+
+    public synchronized String getStatus()
+    {
+        send("status");
+
+        while(status.equals(""))
+        {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        String statusret = status;
+        status = "";
+
+        return statusret;
     }
 
 }

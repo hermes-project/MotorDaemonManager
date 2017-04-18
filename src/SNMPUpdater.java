@@ -19,9 +19,10 @@ public class SNMPUpdater extends Thread
     @Override
     public void run()
     {
+        System.out.println("SNMP Updater launched");
         while (parent.isConnected())
         {
-            String[] vals = parent.sendAndReceive("status",1)[0].split(";");
+            String[] vals = parent.getStatus().split(";");
             if(vals.length != 5)
             {
                 System.err.println("SNMPUpdater : BAD STATUS RECEIVED : "+ Arrays.toString(vals));
@@ -36,7 +37,11 @@ public class SNMPUpdater extends Thread
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.CAMERA, Boolean.toString(Manager.videoOn));
             }
 
-            vals = parent.sendAndReceive("p",1)[0].split(";");
+            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, "0");
+            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, "0");
+            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, "0");
+
+            /*vals = parent.sendAndReceive("p",1)[0].split(";");
             if(vals.length != 3)
             {
                 System.err.println("SNMPUpdater : BAD POS RECEIVED : "+ Arrays.toString(vals));
@@ -46,7 +51,7 @@ public class SNMPUpdater extends Thread
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, vals[0]);
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, vals[1]);
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, vals[2]);
-            }
+            }*/
 
             try {
                 Thread.sleep(5000);
