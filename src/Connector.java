@@ -1,3 +1,9 @@
+import libpf.container.Container;
+import libpf.exceptions.ContainerException;
+import libpf.obstacles.types.Obstacle;
+import libpf.pathfinding.astar.AStarCourbe;
+import libpf.pathfinding.chemin.FakeCheminPathfinding;
+import libpf.robot.Cinematique;
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Pipeline;
@@ -6,7 +12,9 @@ import snmp.SNMPAgent;
 import java.io.*;
 
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -15,6 +23,10 @@ import java.util.Objects;
 public class Connector extends Thread
 {
     private final String mutex = "mutex";
+
+    private static final List<Obstacle> obstacles = new ArrayList<Obstacle>();
+
+    private static Container container = null;
 
     private Socket socket = null;
 
@@ -36,6 +48,15 @@ public class Connector extends Thread
 
     Connector()
     {
+        try
+        {
+            if(container == null) container = new Container(obstacles);
+        }
+        catch (ContainerException | InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
         this.start();
     }
 
@@ -191,6 +212,14 @@ public class Connector extends Thread
             double gotoA = Double.parseDouble(args[3]);
 
             //TODO call to PF & followpath
+            try {
+                FakeCheminPathfinding chemin = container.getService(FakeCheminPathfinding.class);
+                AStarCourbe astar = container.getService(AStarCourbe.class);
+                Cinematique arrivee = new Cinematique(gotoX, gotoY, gotoA, true, 0);
+            } catch (ContainerException e) {
+                e.printStackTrace();
+            }
+
 
             return true;
         }
