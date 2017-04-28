@@ -11,9 +11,23 @@ public class SNMPUpdater extends Thread
 
     private final Connector parent;
 
+    private double posX = 0;
+    private double posY = 0;
+    private double angle = 0;
+
     SNMPUpdater(Connector conn)
     {
         this.parent = conn;
+    }
+
+    public Double[] getPos()
+    {
+        Double[] res = new Double[3];
+        res[0] = posX;
+        res[1] = posY;
+        res[2] = angle;
+
+        return res;
     }
 
     @Override
@@ -37,26 +51,20 @@ public class SNMPUpdater extends Thread
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.CAMERA, Boolean.toString(Manager.videoOn));
             }
 
-            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, "0");
-            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, "0");
-            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, "0");
+            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, vals[5]);
+            posX = Double.parseDouble(vals[5]);
 
-            /*vals = parent.sendAndReceive("p",1)[0].split(";");
-            if(vals.length != 3)
-            {
-                System.err.println("SNMPUpdater : BAD POS RECEIVED : "+ Arrays.toString(vals));
-            }
-            else
-            {
-                SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, vals[0]);
-                SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, vals[1]);
-                SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, vals[2]);
-            }*/
+            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, vals[6]);
+            posY = Double.parseDouble(vals[6]);
+
+            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, vals[7]);
+            angle = Double.parseDouble(vals[7]);
+
 
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("INTERRUPTED : Triggering force update");
             }
         }
     }

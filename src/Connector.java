@@ -1,9 +1,12 @@
 import libpf.container.Container;
 import libpf.exceptions.ContainerException;
+import libpf.exceptions.PathfindingException;
 import libpf.obstacles.types.Obstacle;
 import libpf.pathfinding.astar.AStarCourbe;
 import libpf.pathfinding.chemin.FakeCheminPathfinding;
+import libpf.pathfinding.dstarlite.gridspace.PointGridSpace;
 import libpf.robot.Cinematique;
+import libpf.robot.CinematiqueObs;
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Pipeline;
@@ -12,10 +15,7 @@ import snmp.SNMPAgent;
 import java.io.*;
 
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Class representing any system connected to the manager
@@ -45,6 +45,8 @@ public class Connector extends Thread
     Pipeline pipe = new Pipeline();
 
     private boolean canOrder = false;
+
+    SNMPUpdater updater;
 
     Connector()
     {
@@ -116,7 +118,7 @@ public class Connector extends Thread
 
             if(!canOrder)
             {
-                SNMPUpdater updater = new SNMPUpdater(this);
+                updater = new SNMPUpdater(this);
                 updater.start();
             }
 
@@ -203,7 +205,18 @@ public class Connector extends Thread
         {
             if(!target.isConnected()) return true;
 
-            Double[] pos = target.getPosition();
+            // Forcing update
+            target.updater.interrupt();
+
+            // Waiting for update
+            try
+            {
+                Thread.sleep(1500);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
 
             String[] args = order.split(" ");
 
@@ -211,15 +224,37 @@ public class Connector extends Thread
             double gotoY = Double.parseDouble(args[2]);
             double gotoA = Double.parseDouble(args[3]);
 
-            //TODO call to PF & followpath
-            try {
+            try
+            {
                 FakeCheminPathfinding chemin = container.getService(FakeCheminPathfinding.class);
                 AStarCourbe astar = container.getService(AStarCourbe.class);
                 Cinematique arrivee = new Cinematique(gotoX, gotoY, gotoA, true, 0);
-            } catch (ContainerException e) {
+                Double[] actualPos = target.updater.getPos();
+                Cinematique depart = new Cinematique(actualPos[0], actualPos[1], actualPos[2], true, 0);
+
+                astar.initializeNewSearch(arrivee, true, depart);
+                astar.process(chemin);
+
+                System.out.println("The computed path is :");
+                StringBuilder pathstr = new StringBuilder("followpath ");
+                List<CinematiqueObs> path = chemin.getPath();
+                int i = 0;
+                for(CinematiqueObs c : path)
+                {
+                    System.out.println(c);
+                    pathstr.append(String.format(Locale.US, "%d", (int)PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
+                    pathstr.append(":");
+                    pathstr.append(String.format(Locale.US, "%d", (int)(100*c.courbureReelle)));
+                    pathstr.append(";");
+                }
+
+                System.out.println("Sending : "+pathstr.toString().substring(0, pathstr.toString().length() - 2));
+
+                target.send(pathstr.toString().substring(0, pathstr.toString().length() - 2));
+
+            } catch (ContainerException | PathfindingException | InterruptedException e) {
                 e.printStackTrace();
             }
-
 
             return true;
         }
@@ -337,7 +372,7 @@ public class Connector extends Thread
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("INTERRUPTED : Triggering force update");
             }
         }
 
