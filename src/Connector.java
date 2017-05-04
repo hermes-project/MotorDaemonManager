@@ -86,7 +86,7 @@ public class Connector extends Thread
     {
         if(socket == null) return false;
 
-        byte[] b = new byte[1024];
+        byte[] b = new byte[65536];
 
         try {
             input.read(b);
@@ -126,7 +126,7 @@ public class Connector extends Thread
             {
                 try
                 {
-                    byte[] in = new byte[1024];
+                    byte[] in = new byte[65536];
 
                     int rbytes;
 
