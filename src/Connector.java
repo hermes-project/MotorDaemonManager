@@ -271,6 +271,19 @@ public class Connector extends Thread
             return true;
         }
 
+        else if(order.contains("newmap"))
+        {
+            try {
+                Connector.updateContainer(new Container(MapParser.parseMap(order.substring(6))));
+            } catch (ContainerException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            target.send(order);
+
+            return true;
+        }
+
         else if(order.contains("startwebcamera"))
         {
             if(!target.isConnected()) return true;
@@ -380,6 +393,11 @@ public class Connector extends Thread
         status = "";
 
         return statusret;
+    }
+
+    public synchronized static void updateContainer(Container c)
+    {
+
     }
 
 }

@@ -1,3 +1,5 @@
+import libpf.container.Container;
+import libpf.exceptions.ContainerException;
 import org.apache.log4j.PropertyConfigurator;
 import org.freedesktop.gstreamer.Gst;
 import org.snmp4j.asn1.BER;
@@ -10,6 +12,7 @@ import snmp.MOCreator;
 import snmp.SNMPAgent;
 import snmp.SNMPWrapper;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -46,6 +49,27 @@ public class Manager
 
         client = new Connector();
         intechos = new Connector();
+
+        if(args.length >= 2 && args[0].equals("-m"))
+        {
+            try
+            {
+                FileInputStream in = new FileInputStream(args[1]);
+                StringBuilder s = new StringBuilder();
+                while(in.available() > 0)
+                {
+                    s.append(in.read());
+                }
+                in.close();
+
+                Connector.updateContainer(new Container(MapParser.parseMap(s.toString())));
+
+            }
+            catch (IOException | ContainerException e)
+            {
+                e.printStackTrace();
+            }
+        }
 
         try
         {
