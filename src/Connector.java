@@ -257,7 +257,7 @@ public class Connector extends Thread
                         way = c.enMarcheAvant;
                         if(way) pathstr.append("way:forward;");
                         else pathstr.append("way:backward;");
-                        i = 0;
+                        //i = 0;
                     }
 
                     System.out.println(c);
