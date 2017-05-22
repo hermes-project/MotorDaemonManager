@@ -177,7 +177,7 @@ public class Connector extends Thread
         return socket != null && socket.isConnected() && connected && started;
     }
 
-    public synchronized void write(byte[] b)
+    public void write(byte[] b)
     {
         if(socket == null || !socket.isConnected()) return;
 
@@ -233,24 +233,52 @@ public class Connector extends Thread
                 Cinematique depart = new Cinematique(actualPos[0], actualPos[1], actualPos[2], true, 0);
 
                 astar.initializeNewSearch(arrivee, true, depart);
-                astar.process(chemin);
 
+                try {
+                    astar.process(chemin);
+                } catch (libpf.exceptions.PathfindingException e) {
+                    e.printStackTrace();
+                    // TODO gestion
+                }
                 System.out.println("The computed path is :");
                 StringBuilder pathstr = new StringBuilder("followpath ");
+                StringBuilder pathfeedback = new StringBuilder("");
                 List<CinematiqueObs> path = chemin.getPath();
                 int i = 0;
+                boolean way = path.get(0).enMarcheAvant; // true = forward ; false = backward
+
+                if(way) pathstr.append("way:forward;");
+                else pathstr.append("way:backward;");
+
                 for(CinematiqueObs c : path)
                 {
+                    if(way != c.enMarcheAvant)
+                    {
+                        way = c.enMarcheAvant;
+                        if(way) pathstr.append("way:forward;");
+                        else pathstr.append("way:backward;");
+                        i = 0;
+                    }
+
                     System.out.println(c);
-                    pathstr.append(String.format(Locale.US, "%d", (int)PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
+                    pathstr.append(String.format(Locale.US, "%d", (int) PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
                     pathstr.append(":");
                     pathstr.append(String.format(Locale.US, "%d", (int)(1000*c.courbureReelle)));
                     pathstr.append(";");
+
+                    pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getX()));
+                    pathfeedback.append(":");
+                    pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getY()));
+                    pathfeedback.append(";");
+
                 }
 
-                System.out.println("Sending : "+pathstr.toString().substring(0, pathstr.toString().length() - 2));
+                System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 2));
+                System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 2));
 
                 target.send(pathstr.toString().substring(0, pathstr.toString().length() - 2));
+                write((pathfeedback.toString().substring(0, pathfeedback.toString().length() - 2)+"\r\n").getBytes());
+
 
             } catch (ContainerException | PathfindingException | InterruptedException e) {
                 e.printStackTrace();
@@ -327,7 +355,7 @@ public class Connector extends Thread
         return new Double[]{x,y,o};
     }
 
-    public synchronized void send(String s)
+    public void send(String s)
     {
         if(socket == null || !socket.isConnected()) return;
 
@@ -348,7 +376,7 @@ public class Connector extends Thread
 
     }
 
-    public synchronized String[] sendAndReceive(String toSend, int numberOfLines)
+    public String[] sendAndReceive(String toSend, int numberOfLines)
     {
         synchronized (mutex)
         {
