@@ -201,7 +201,13 @@ public class Connector extends Thread
     {
         if(!canOrder && !order.contains("MDSTATUS")) return false;
 
-        if(order.contains("goto"))
+        if(order.contains("pos"))
+        {
+            Double[] actualPos = target.updater.getPos();
+            write((Double.toString(actualPos[0])+";"+Double.toString(actualPos[1])+";"+Double.toString(actualPos[3])+"\r\n").getBytes());
+            return true;
+        }
+        else if(order.contains("goto"))
         {
             if(!target.isConnected()) return true;
 
