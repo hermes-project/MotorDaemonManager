@@ -37,7 +37,7 @@ public class SNMPUpdater extends Thread
         while (parent.isConnected())
         {
             String[] vals = parent.getStatus().split(";");
-            if(vals.length != 5)
+            if(vals.length != 8)
             {
                 System.err.println("SNMPUpdater : BAD STATUS RECEIVED : "+ Arrays.toString(vals));
             }
@@ -49,20 +49,23 @@ public class SNMPUpdater extends Thread
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.RAM_TOTAL, vals[3]);
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.SPEED, vals[4]);
                 SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.CAMERA, Boolean.toString(Manager.videoOn));
+
+                SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, vals[5]);
+                posX = Double.parseDouble(vals[5]);
+
+                SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, vals[6]);
+                posY = Double.parseDouble(vals[6]);
+
+                SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, vals[7]);
+                angle = Double.parseDouble(vals[7]);
+
             }
 
-            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, vals[5]);
-            posX = Double.parseDouble(vals[5]);
 
-            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, vals[6]);
-            posY = Double.parseDouble(vals[6]);
-
-            SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, vals[7]);
-            angle = Double.parseDouble(vals[7]);
 
 
             try {
-                Thread.sleep(5000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 System.out.println("INTERRUPTED : Triggering force update");
             }

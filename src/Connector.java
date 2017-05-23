@@ -263,7 +263,7 @@ public class Connector extends Thread
                     System.out.println(c);
                     pathstr.append(String.format(Locale.US, "%d", (int) PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
                     pathstr.append(":");
-                    pathstr.append(String.format(Locale.US, "%d", (int)(1000*c.courbureReelle)));
+                    pathstr.append(String.format(Locale.US, "%d", (int)(1./(1000.*c.courbureReelle))));
                     pathstr.append(";");
 
                     pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getX()));
