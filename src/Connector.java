@@ -15,6 +15,7 @@ import snmp.SNMPAgent;
 import java.io.*;
 
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -23,6 +24,8 @@ import java.util.*;
 public class Connector extends Thread
 {
     private final String mutex = "mutex";
+
+    private BufferedWriter out;
 
     private static final List<Obstacle> obstacles = new ArrayList<Obstacle>();
 
@@ -48,8 +51,21 @@ public class Connector extends Thread
 
     SNMPUpdater updater;
 
+    private SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+    public String name;
+
     Connector()
     {
+        if(out == null)
+        {
+            try {
+                out = new BufferedWriter(new FileWriter("comm.log"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         try
         {
             if(container == null) container = new Container(obstacles);
@@ -62,8 +78,9 @@ public class Connector extends Thread
         this.start();
     }
 
-    synchronized void setInfos(Socket s, Connector target, boolean canOrder) throws IOException
+    synchronized void setInfos(String name, Socket s, Connector target, boolean canOrder) throws IOException
     {
+        this.name = name;
         this.target = target;
         this.socket = s;
         this.canOrder = canOrder;
@@ -140,10 +157,18 @@ public class Connector extends Thread
                     String s = new String(in);
                     s = s.replace("\0", "");
 
-                    if(specialTreatment(s)) continue;
+                    if(specialTreatment(s))
+                    {
+                        out.write(sdfDate.format(new Date())+" : "+name+" -> MDM\n"+s+"\n\n");
+                        out.flush();
+                        continue;
+                    }
 
                     if(target != null && target.isConnected())
                     {
+                        out.write(sdfDate.format(new Date())+" : "+name+ " -> "+target.name+"\n"+s+"\n\n");
+                        out.flush();
+
                         target.write(s.getBytes());
                     }
                 }
@@ -204,7 +229,14 @@ public class Connector extends Thread
         if(order.contains("pos"))
         {
             Double[] actualPos = target.updater.getPos();
-            write((Double.toString(actualPos[0])+";"+Double.toString(actualPos[1])+";"+Double.toString(actualPos[3])+"\r\n").getBytes());
+            try {
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(Double.toString(actualPos[0])+";"+Double.toString(actualPos[1])+";"+Double.toString(actualPos[2]))+"\\r\\n\n\n");
+                out.flush();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            write((Double.toString(actualPos[0])+";"+Double.toString(actualPos[1])+";"+Double.toString(actualPos[2])+"\r\n").getBytes());
             return true;
         }
         else if(order.contains("goto"))
@@ -269,7 +301,7 @@ public class Connector extends Thread
                     System.out.println(c);
                     pathstr.append(String.format(Locale.US, "%d", (int) PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
                     pathstr.append(":");
-                    pathstr.append(String.format(Locale.US, "%d", (int)(1./(1000.*(c.courbureReelle+0.00000001)))));
+                    pathstr.append(String.format(Locale.US, "%d", (int)(1000./(c.courbureReelle+0.000000001))));
                     pathstr.append(";");
 
                     pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getX()));
@@ -279,14 +311,16 @@ public class Connector extends Thread
 
                 }
 
-                System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 2));
-                System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 2));
+                System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 1));
+                System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
 
-                target.send(pathstr.toString().substring(0, pathstr.toString().length() - 2));
-                write((pathfeedback.toString().substring(0, pathfeedback.toString().length() - 2)+"\r\n").getBytes());
+                target.send(pathstr.toString().substring(0, pathstr.toString().length() - 1));
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+pathstr.toString().substring(0, pathstr.toString().length() - 1)+"\n\n");
+                write((pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\r\n").getBytes());
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\\r\\n\n\n"));
+                out.flush();
 
-
-            } catch (ContainerException | PathfindingException | InterruptedException e) {
+            } catch (ContainerException | PathfindingException | InterruptedException | IOException e) {
                 e.printStackTrace();
             }
 
@@ -296,6 +330,12 @@ public class Connector extends Thread
         else if(order.contains("motordaemonstatus"))
         {
             write((Boolean.toString(target.isConnected())+"\r\n").getBytes());
+            try {
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(Boolean.toString(target.isConnected())+"\\r\\n\n\n"));
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return true;
         }
 
@@ -314,6 +354,13 @@ public class Connector extends Thread
             }
 
             target.send(order);
+            try {
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+order+"\n\n");
+                out.flush();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             return true;
         }
@@ -328,6 +375,13 @@ public class Connector extends Thread
             if(args.length != 2) return true;
 
             target.send("startcamera");
+
+            try {
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\nstartcamera\n\n");
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             pipe = new Pipeline();
             Bin bin = Bin.launch("udpsrc port=56988 ! application/x-rtp, media=video, encoding-name=JPEG, clock-rate=90000, payload=26 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! timeoverlay ! videorate ! video/x-raw,framerate=20/1 ! videoconvert ! vp8enc cpu-used=16 end-usage=vbr target-bitrate=100000 token-partitions=3 static-threshold=1000 min-quantizer=0 max-quantizer=63 threads=2 error-resilient=1 ! rtpvp8pay ! udpsink host="+args[1]+" port=5004",true);
@@ -399,6 +453,8 @@ public class Connector extends Thread
                 for(int i=0 ; i<numberOfLines ; i++)
                 {
                     out[i] = iss.readLine().replace("\0","");
+                    this.out.write(sdfDate.format(new Date())+" : "+name+" -> MDM"+"\n"+out[i]+"\n\n");
+                    this.out.flush();
                     Thread.sleep(20);
                 }
 

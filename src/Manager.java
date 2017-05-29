@@ -41,11 +41,11 @@ public class Manager
     {
         Gst.init("MotorDaemonManager",args);
 
-        LogFactory.setLogFactory(new Log4jLogFactory());
+       /* LogFactory.setLogFactory(new Log4jLogFactory());
         PropertyConfigurator.configure("log4j.properties");
         BER.setCheckSequenceLength(false);
 
-        LogFactory.getLogFactory().getRootLogger().setLogLevel(LogLevel.DEBUG);
+        LogFactory.getLogFactory().getRootLogger().setLogLevel(LogLevel.ERROR);*/
 
         client = new Connector();
         intechos = new Connector();
@@ -105,7 +105,7 @@ public class Manager
                 if (!client.isConnected()) {
                     try {
                         System.out.println("Waiting for client");
-                        client.setInfos(clientS.accept(), intechos, true);
+                        client.setInfos("Client", clientS.accept(), intechos, true);
                         intechos.setTarget(client);
                         System.out.println("Client connected.");
                     } catch (IOException e) {
@@ -140,7 +140,7 @@ public class Manager
                 try {
                     SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.STATE, "false");
                     System.out.println("Waiting for MotorDaemon");
-                    intechos.setInfos(intechosS.accept(), client, false);
+                    intechos.setInfos("MotorDaemon", intechosS.accept(), client, false);
                     System.out.println("MotorDaemon connected.");
                     SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.STATE, "true");
                 } catch (IOException e) {
