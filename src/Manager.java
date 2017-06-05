@@ -1,3 +1,4 @@
+import config.Config;
 import libpf.container.Container;
 import libpf.exceptions.ContainerException;
 import org.apache.log4j.PropertyConfigurator;
@@ -26,12 +27,10 @@ public class Manager
     private static Connector intechos;
 
     private static ServerSocket clientS;
-    private final static int clientPort=  56987;
-
     private static ServerSocket intechosS;
-    private final static int intechosPort= 56990;
 
-    private final static int snmpPort=56991;
+
+    public static final Config config = new Config(MDMConfig.values(), "mdm_config.ini", true);
 
     static final OID sysDescr = new OID("1.3.6.1.2.1.1.1.0");
 
@@ -74,7 +73,7 @@ public class Manager
         try
         {
             System.out.println("Starting SNMP Agent ..");
-            Manager.snmpAgent =  new SNMPAgent("0.0.0.0/"+Integer.toString(snmpPort));
+            Manager.snmpAgent =  new SNMPAgent("0.0.0.0/"+Integer.toString(config.getInt(MDMConfig.SNMP_PORT)));
             System.out.println("Starting SNMP Agent ...");
             Manager.snmpAgent.start();
             System.out.println("Successfully started SNMP Agent !");
@@ -86,7 +85,7 @@ public class Manager
         }
         catch (IOException e)
         {
-            System.err.println("ERROR : Could not launch SNMP agent on port "+Integer.toString(snmpPort));
+            System.err.println("ERROR : Could not launch SNMP agent on port "+Integer.toString(config.getInt(MDMConfig.SNMP_PORT)));
             e.printStackTrace();
         }
 
@@ -95,7 +94,7 @@ public class Manager
             {
                 if (clientS == null) {
                     try {
-                        clientS = new ServerSocket(clientPort);
+                        clientS = new ServerSocket(config.getInt(MDMConfig.CLIENT_PORT));
                     } catch (IOException e) {
                         e.printStackTrace();
                         continue;
@@ -128,7 +127,7 @@ public class Manager
             if(intechosS == null)
             {
                 try {
-                    intechosS = new ServerSocket(intechosPort);
+                    intechosS = new ServerSocket(config.getInt(MDMConfig.INTECHOS_PORT));
                 } catch (IOException e) {
                     e.printStackTrace();
                     continue;

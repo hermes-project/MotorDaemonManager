@@ -314,8 +314,12 @@ public class Connector extends Thread
                 System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 1));
                 System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
 
-                target.send(pathstr.toString().substring(0, pathstr.toString().length() - 1));
-                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+pathstr.toString().substring(0, pathstr.toString().length() - 1)+"\n\n");
+                if(args.length <= 4 || args[5].equals("1"))
+                {
+                    target.send(pathstr.toString().substring(0, pathstr.toString().length() - 1));
+                    out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+pathstr.toString().substring(0, pathstr.toString().length() - 1)+"\n\n");
+                }
+
                 write((pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\r\n").getBytes());
                 out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\\r\\n\n\n"));
                 out.flush();
