@@ -29,6 +29,8 @@ public class Manager
     private static ServerSocket clientS;
     private static ServerSocket intechosS;
 
+    private static boolean fallbackToBase = false;
+
 
     public static final Config config = new Config(MDMConfig.values(), "mdm_config.ini", true);
 
@@ -49,7 +51,7 @@ public class Manager
         client = new Connector();
         intechos = new Connector();
 
-        if(args.length >= 2 && args[0].equals("-m"))
+        if((args.length >= 2 && args[0].equals("-m")) || (args.length >= 3 && args[1].equals("-m")))
         {
             try
             {
@@ -68,6 +70,12 @@ public class Manager
             {
                 e.printStackTrace();
             }
+
+            if(args.length >= 3 && (args[2].equals("--fallback") || args[0].equals("--fallback")))
+            {
+                Manager.fallbackToBase = true;
+            }
+
         }
 
         try
@@ -142,6 +150,14 @@ public class Manager
                     intechos.setInfos("MotorDaemon", intechosS.accept(), client, false);
                     System.out.println("MotorDaemon connected.");
                     SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.STATE, "true");
+
+                    if(fallbackToBase)
+                    {
+                        System.out.println("FALLING BACK TO BASE !");
+                        intechos.fallbackToBase();
+                        fallbackToBase = false;
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                     continue;

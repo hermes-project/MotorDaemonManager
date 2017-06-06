@@ -149,7 +149,7 @@ public class Connector extends Thread
 
                     //synchronized (mutex)
                     //{
-                        rbytes = input.read(in);
+                    rbytes = input.read(in);
                     //}
 
                     if(rbytes < 0) throw new IOException();
@@ -311,11 +311,11 @@ public class Connector extends Thread
 
                 }
 
-                System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 1));
                 System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
 
                 if(args.length <= 4 || args[5].equals("1"))
                 {
+                    System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 1));
                     target.send(pathstr.toString().substring(0, pathstr.toString().length() - 1));
                     out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+pathstr.toString().substring(0, pathstr.toString().length() - 1)+"\n\n");
                 }
@@ -492,6 +492,63 @@ public class Connector extends Thread
     public synchronized static void updateContainer(Container c)
     {
 
+    }
+
+    public void fallbackToBase()
+    {
+        try
+        {
+            Thread.sleep(1000);
+
+            FakeCheminPathfinding chemin = container.getService(FakeCheminPathfinding.class);
+            AStarCourbe astar = container.getService(AStarCourbe.class);
+            Cinematique arrivee = new Cinematique(MapParser.base.getX(), MapParser.base.getY(), MapParser.angleStart, true, 0);
+            Double[] actualPos = target.updater.getPos();
+            Cinematique depart = new Cinematique(actualPos[0], actualPos[1], actualPos[2], true, 0);
+
+            astar.initializeNewSearch(arrivee, true, depart);
+
+            try {
+                astar.process(chemin);
+            } catch (libpf.exceptions.PathfindingException e) {
+                e.printStackTrace();
+                // TODO gestion
+            }
+            System.out.println("The computed path is :");
+            StringBuilder pathstr = new StringBuilder("followpath ");
+            List<CinematiqueObs> path = chemin.getPath();
+            int i = 0;
+            boolean way = path.get(0).enMarcheAvant; // true = forward ; false = backward
+
+            if(way) pathstr.append("way:forward;");
+            else pathstr.append("way:backward;");
+
+            for(CinematiqueObs c : path)
+            {
+                if(way != c.enMarcheAvant)
+                {
+                    way = c.enMarcheAvant;
+                    if(way) pathstr.append("way:forward;");
+                    else pathstr.append("way:backward;");
+                    //i = 0;
+                }
+
+                System.out.println(c);
+                pathstr.append(String.format(Locale.US, "%d", (int) PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
+                pathstr.append(":");
+                pathstr.append(String.format(Locale.US, "%d", (int)(1000./(c.courbureReelle+0.000000001))));
+                pathstr.append(";");
+
+            }
+
+            System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 1));
+            target.send(pathstr.toString().substring(0, pathstr.toString().length() - 1));
+            out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+pathstr.toString().substring(0, pathstr.toString().length() - 1)+"\n\n");
+            out.flush();
+
+        } catch (ContainerException | PathfindingException | InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -14,6 +14,11 @@ import java.util.List;
  */
 public class MapParser
 {
+
+    public static Vec2RO base;
+
+    public static double angleStart;
+
     public static List<Obstacle> parseMap(String jsonString)
     {
         ArrayList<Obstacle> res = new ArrayList<>();
@@ -25,6 +30,10 @@ public class MapParser
         JSONArray objects = json.getJSONArray("obstacles");
 
         double scale = map.getDouble("scale");
+
+        base = new Vec2RO((int)(map.getInt("xstart")*scale), (int)(map.getInt("ystart")*scale));
+
+        angleStart = map.getDouble("anglestart");
 
         for(int i=0 ; i < objects.length() ; i++)
         {
