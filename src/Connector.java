@@ -241,7 +241,7 @@ public class Connector extends Thread
         }
         else if(order.contains("goto"))
         {
-            if(!target.isConnected()) return true;
+            if((args.length <= 4 || args[5].equals("1")) && !target.isConnected()) return true;
 
             // Forcing update
             target.updater.interrupt();
