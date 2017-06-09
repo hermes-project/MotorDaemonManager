@@ -48,8 +48,8 @@ public class Manager
 
         LogFactory.getLogFactory().getRootLogger().setLogLevel(LogLevel.ERROR);*/
 
-        client = new Connector();
-        intechos = new Connector();
+        client = new Connector(true);
+        intechos = new Connector(false);
 
         if((args.length >= 2 && args[0].equals("-m")) || (args.length >= 3 && args[1].equals("-m")))
         {

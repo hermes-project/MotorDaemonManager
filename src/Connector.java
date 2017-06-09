@@ -55,8 +55,9 @@ public class Connector extends Thread
 
     public String name;
 
-    Connector()
+    Connector(boolean canOrder)
     {
+        this.canOrder = canOrder;
         if(out == null)
         {
             try {
@@ -74,6 +75,8 @@ public class Connector extends Thread
         {
             e.printStackTrace();
         }
+
+        if(!canOrder) updater = new SNMPUpdater(this);
 
         this.start();
     }
@@ -226,7 +229,27 @@ public class Connector extends Thread
     {
         if(!canOrder && !order.contains("MDSTATUS")) return false;
 
-        if(order.contains("pos"))
+        if(order.contains("setpos"))
+        {
+            String[] args = order.split(" ");
+            Double[] p = new Double[3];
+            p[0] = Double.parseDouble(args[1]);
+            p[1] = Double.parseDouble(args[2]);
+            p[2] = target.updater.getPos()[2];
+            target.updater.setPos(p);
+            return false;
+        }
+        else if(order.contains("setang"))
+        {
+            String[] args = order.split(" ");
+            Double[] p = new Double[3];
+            p[0] = target.updater.getPos()[0];
+            p[1] = target.updater.getPos()[1];
+            p[2] = Double.parseDouble(args[1]);
+            target.updater.setPos(p);
+            return false;
+        }
+        else if(order.contains("pos"))
         {
             Double[] actualPos = target.updater.getPos();
             try {

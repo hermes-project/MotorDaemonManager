@@ -30,6 +30,13 @@ public class SNMPUpdater extends Thread
         return res;
     }
 
+    public void setPos(Double[] npos)
+    {
+        posX = npos[0];
+        posY = npos[1];
+        angle = npos[2];
+    }
+
     @Override
     public void run()
     {
