@@ -266,7 +266,7 @@ public class Connector extends Thread
         {
             String[] args = order.split(" ");
 
-            if((args.length <= 4 || args[5].equals("1")) && !target.isConnected()) return true;
+            if((args.length <= 4 || args[4].equals("1")) && !target.isConnected()) return true;
 
             // Forcing update
             target.updater.interrupt();
@@ -336,7 +336,7 @@ public class Connector extends Thread
 
                 System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
 
-                if(args.length <= 4 || args[5].equals("1"))
+                if(args.length <= 4 || args[4].equals("1"))
                 {
                     System.out.println("Sending to MD : "+pathstr.toString().substring(0, pathstr.toString().length() - 1));
                     target.send(pathstr.toString().substring(0, pathstr.toString().length() - 1));
