@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="motordaemonmanager" default="all">
+  
+  
+  <property file="motordaemonmanager.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*.yarb/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.egg"/>
+    <include name="*.jar"/>
+    <include name="*.ear"/>
+    <include name="*.swc"/>
+    <include name="*.war"/>
+    <include name="*.ane"/>
+    <include name="*.zip"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.1.8" value="${jdk.home.1.8}/bin"/>
+  <path id="jdk.classpath.1.8">
+    <fileset dir="${jdk.home.1.8}">
+      <include name="jre/lib/charsets.jar"/>
+      <include name="jre/lib/ext/cldrdata.jar"/>
+      <include name="jre/lib/ext/dnsns.jar"/>
+      <include name="jre/lib/ext/jaccess.jar"/>
+      <include name="jre/lib/ext/jfxrt.jar"/>
+      <include name="jre/lib/ext/localedata.jar"/>
+      <include name="jre/lib/ext/nashorn.jar"/>
+      <include name="jre/lib/ext/sunec.jar"/>
+      <include name="jre/lib/ext/sunjce_provider.jar"/>
+      <include name="jre/lib/ext/sunpkcs11.jar"/>
+      <include name="jre/lib/ext/zipfs.jar"/>
+      <include name="jre/lib/jce.jar"/>
+      <include name="jre/lib/jfxswt.jar"/>
+      <include name="jre/lib/jsse.jar"/>
+      <include name="jre/lib/management-agent.jar"/>
+      <include name="jre/lib/resources.jar"/>
+      <include name="jre/lib/rt.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.1.8}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.1.8}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.1.8"/>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.motordaemonmanager.classpath">
+    <pathelement location="${basedir}/config.jar"/>
+    <pathelement location="${basedir}/gst1-java-core-0.9-SNAPSHOT.jar"/>
+    <pathelement location="${basedir}/jna-4.3.0.jar"/>
+    <pathelement location="${basedir}/jna-platform-4.3.0.jar"/>
+    <pathelement location="${basedir}/json-20160810.jar"/>
+    <pathelement location="${basedir}/log4j-1.2-api-2.8.1.jar"/>
+    <pathelement location="${basedir}/log4j-api-2.8.1.jar"/>
+    <pathelement location="${basedir}/log4j-core-2.8.1.jar"/>
+    <pathelement location="${basedir}/log4j-iostreams-2.8.1.jar"/>
+    <pathelement location="${basedir}/pf/libpf.jar"/>
+    <pathelement location="${basedir}/snmp4j-2.5.5.jar"/>
+    <pathelement location="${basedir}/snmp4j-agent-2.5.3.jar"/>
+  </path>
+  
+  <!-- Modules -->
+  
+  <import file="${basedir}/module_motordaemonmanager.xml"/>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.motordaemonmanager" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.motordaemonmanager" description="build all modules"/>
+  
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.motordaemonmanager:jar" value="${basedir}/out/artifacts/MotorDaemonManager_jar"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.MotorDaemonManager.jar" value="${artifacts.temp.dir}/MotorDaemonManager.jar"/>
+  </target>
+  
+  <target name="artifact.motordaemonmanager:jar" depends="init.artifacts, compile.module.motordaemonmanager" description="Build &#39;MotorDaemonManager:jar&#39; artifact">
+    <property name="artifact.temp.output.motordaemonmanager:jar" value="${artifacts.temp.dir}/MotorDaemonManager_jar"/>
+    <mkdir dir="${artifact.temp.output.motordaemonmanager:jar}"/>
+    <jar destfile="${temp.jar.path.MotorDaemonManager.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <manifest>
+        <attribute name="Main-Class" value="Manager"/>
+      </manifest>
+      <zipfileset dir="${motordaemonmanager.output.dir}"/>
+      <zipfileset src="${basedir}/jna-platform-4.3.0.jar"/>
+      <zipfileset src="${basedir}/jna-4.3.0.jar"/>
+      <zipfileset src="${basedir}/gst1-java-core-0.9-SNAPSHOT.jar"/>
+      <zipfileset src="${basedir}/snmp4j-2.5.5.jar"/>
+      <zipfileset src="${basedir}/snmp4j-agent-2.5.3.jar"/>
+      <zipfileset src="${basedir}/log4j-api-2.8.1.jar"/>
+      <zipfileset src="${basedir}/log4j-core-2.8.1.jar"/>
+      <zipfileset src="${basedir}/log4j-iostreams-2.8.1.jar"/>
+      <zipfileset src="${basedir}/log4j-1.2-api-2.8.1.jar"/>
+      <zipfileset src="${basedir}/pf/libpf.jar"/>
+      <zipfileset src="${basedir}/json-20160810.jar"/>
+      <zipfileset src="${basedir}/config.jar"/>
+    </jar>
+    <copy file="${temp.jar.path.MotorDaemonManager.jar}" tofile="${artifact.temp.output.motordaemonmanager:jar}/MotorDaemonManager.jar"/>
+  </target>
+  
+  <target name="build.all.artifacts" depends="artifact.motordaemonmanager:jar" description="Build all artifacts">
+    <mkdir dir="${artifact.output.motordaemonmanager:jar}"/>
+    <copy todir="${artifact.output.motordaemonmanager:jar}">
+      <fileset dir="${artifact.temp.output.motordaemonmanager:jar}"/>
+    </copy>
+    
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+  
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
+</project>

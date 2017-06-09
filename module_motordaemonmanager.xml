@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_motordaemonmanager" default="compile.module.motordaemonmanager">
+  <dirname property="module.motordaemonmanager.basedir" file="${ant.file.module_motordaemonmanager}"/>
+  
+  <property name="module.jdk.home.motordaemonmanager" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.motordaemonmanager" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.motordaemonmanager" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.motordaemonmanager" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="motordaemonmanager.output.dir" value="${module.motordaemonmanager.basedir}/out/production/MotorDaemonManager"/>
+  <property name="motordaemonmanager.testoutput.dir" value="${module.motordaemonmanager.basedir}/out/test/MotorDaemonManager"/>
+  
+  <path id="motordaemonmanager.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="motordaemonmanager.module.production.classpath">
+    <path refid="${module.jdk.classpath.motordaemonmanager}"/>
+    <path refid="library.motordaemonmanager.classpath"/>
+  </path>
+  
+  <path id="motordaemonmanager.runtime.production.module.classpath">
+    <pathelement location="${motordaemonmanager.output.dir}"/>
+    <path refid="library.motordaemonmanager.classpath"/>
+  </path>
+  
+  <path id="motordaemonmanager.module.classpath">
+    <path refid="${module.jdk.classpath.motordaemonmanager}"/>
+    <pathelement location="${motordaemonmanager.output.dir}"/>
+    <path refid="library.motordaemonmanager.classpath"/>
+  </path>
+  
+  <path id="motordaemonmanager.runtime.module.classpath">
+    <pathelement location="${motordaemonmanager.testoutput.dir}"/>
+    <pathelement location="${motordaemonmanager.output.dir}"/>
+    <path refid="library.motordaemonmanager.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.motordaemonmanager">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.motordaemonmanager">
+    <patternset refid="excluded.from.module.motordaemonmanager"/>
+  </patternset>
+  
+  <path id="motordaemonmanager.module.sourcepath">
+    <dirset dir="${module.motordaemonmanager.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.motordaemonmanager" depends="compile.module.motordaemonmanager.production,compile.module.motordaemonmanager.tests" description="Compile module MotorDaemonManager"/>
+  
+  <target name="compile.module.motordaemonmanager.production" description="Compile module MotorDaemonManager; production classes">
+    <mkdir dir="${motordaemonmanager.output.dir}"/>
+    <javac destdir="${motordaemonmanager.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.motordaemonmanager}/javac">
+      <compilerarg line="${compiler.args.motordaemonmanager}"/>
+      <bootclasspath refid="motordaemonmanager.module.bootclasspath"/>
+      <classpath refid="motordaemonmanager.module.production.classpath"/>
+      <src refid="motordaemonmanager.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.motordaemonmanager"/>
+    </javac>
+    
+    <copy todir="${motordaemonmanager.output.dir}">
+      <fileset dir="${module.motordaemonmanager.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.motordaemonmanager.tests" depends="compile.module.motordaemonmanager.production" description="compile module MotorDaemonManager; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.motordaemonmanager" description="cleanup module">
+    <delete dir="${motordaemonmanager.output.dir}"/>
+    <delete dir="${motordaemonmanager.testoutput.dir}"/>
+  </target>
+</project>
