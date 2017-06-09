@@ -241,6 +241,8 @@ public class Connector extends Thread
         }
         else if(order.contains("goto"))
         {
+            String[] args = order.split(" ");
+
             if((args.length <= 4 || args[5].equals("1")) && !target.isConnected()) return true;
 
             // Forcing update
@@ -255,8 +257,6 @@ public class Connector extends Thread
             {
                 e.printStackTrace();
             }
-
-            String[] args = order.split(" ");
 
             double gotoX = Double.parseDouble(args[1]);
             double gotoY = Double.parseDouble(args[2]);
