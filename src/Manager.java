@@ -63,10 +63,9 @@ public class Manager
                 }
                 in.close();
 
-                Connector.updateContainer(new Container(MapParser.parseMap(s.toString())));
-
+                Connector.updateContainer(MapParser.parseMap(s.toString()));
             }
-            catch (IOException | ContainerException e)
+            catch (IOException e)
             {
                 e.printStackTrace();
             }

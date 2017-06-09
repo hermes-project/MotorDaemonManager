@@ -351,11 +351,7 @@ public class Connector extends Thread
 
         else if(order.contains("newmap"))
         {
-            try {
-                Connector.updateContainer(new Container(MapParser.parseMap(order.substring(6))));
-            } catch (ContainerException | InterruptedException e) {
-                e.printStackTrace();
-            }
+            Connector.updateContainer(MapParser.parseMap(order.substring(6)));
 
             target.send(order);
             try {
@@ -489,9 +485,14 @@ public class Connector extends Thread
         return statusret;
     }
 
-    public synchronized static void updateContainer(Container c)
+    public synchronized static void updateContainer(List<Obstacle> fixedObstacles)
     {
-
+        try {
+            container.destructor(true);
+            container = new Container(fixedObstacles);
+        } catch (ContainerException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void fallbackToBase()
