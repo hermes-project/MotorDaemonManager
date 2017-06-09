@@ -303,7 +303,7 @@ public class Connector extends Thread
                 }
                 System.out.println("The computed path is :");
                 StringBuilder pathstr = new StringBuilder("followpath ");
-                StringBuilder pathfeedback = new StringBuilder("");
+                StringBuilder pathfeedback = new StringBuilder("path ");
                 List<CinematiqueObs> path = chemin.getPath();
                 int i = 0;
                 boolean way = path.get(0).enMarcheAvant; // true = forward ; false = backward
