@@ -10,6 +10,8 @@ import libpf.robot.CinematiqueObs;
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Pipeline;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import snmp.SNMPAgent;
 
 import java.io.*;
@@ -303,7 +305,12 @@ public class Connector extends Thread
                 }
                 System.out.println("The computed path is :");
                 StringBuilder pathstr = new StringBuilder("followpath ");
-                StringBuilder pathfeedback = new StringBuilder("path ");
+
+               // StringBuilder pathfeedback = new StringBuilder("path ");
+
+                JSONObject json = new JSONObject();
+                JSONArray list = new JSONArray();
+
                 List<CinematiqueObs> path = chemin.getPath();
                 int i = 0;
                 boolean way = path.get(0).enMarcheAvant; // true = forward ; false = backward
@@ -321,20 +328,29 @@ public class Connector extends Thread
                         //i = 0;
                     }
 
+                    JSONObject o = new JSONObject();
+                    o.put("x", (float)c.getPosition().getX());
+                    o.put("y", (float)c.getPosition().getY());
+                    list.put(o);
+
                     System.out.println(c);
                     pathstr.append(String.format(Locale.US, "%d", (int) PointGridSpace.DISTANCE_ENTRE_DEUX_POINTS * ++i));
                     pathstr.append(":");
                     pathstr.append(String.format(Locale.US, "%d", (int)(1000./(c.courbureReelle+0.000000001))));
                     pathstr.append(";");
 
-                    pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getX()));
-                    pathfeedback.append(":");
-                    pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getY()));
-                    pathfeedback.append(";");
+                //    pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getX()));
+                 //   pathfeedback.append(":");
+                 //   pathfeedback.append(String.format(Locale.US, "%f", c.getPosition().getY()));
+                 //   pathfeedback.append(";");
 
                 }
 
-                System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
+           //     System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
+                System.out.println("Sending to client : "+json.toString());
+
+                json.put("path", list);
+                json.put("type", "path");
 
                 if(args.length <= 4 || args[4].equals("1"))
                 {
@@ -343,8 +359,11 @@ public class Connector extends Thread
                     out.write(sdfDate.format(new Date())+" : "+"MDM -> "+target.name+"\n"+pathstr.toString().substring(0, pathstr.toString().length() - 1)+"\n\n");
                 }
 
-                write((pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\r\n").getBytes());
-                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\\r\\n\n\n"));
+//                write((pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\r\n").getBytes());
+//                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1)+"\\r\\n\n\n"));
+                write((json.toString()+"\r\n").getBytes());
+                out.write(sdfDate.format(new Date())+" : "+"MDM -> "+name+"\n"+(json.toString()+"\\r\\n\n\n"));
+
                 out.flush();
 
             } catch (ContainerException | PathfindingException | InterruptedException | IOException e) {
