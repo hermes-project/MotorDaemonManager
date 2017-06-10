@@ -329,8 +329,8 @@ public class Connector extends Thread
                     }
 
                     JSONObject o = new JSONObject();
-                    o.put("x", (float)c.getPosition().getX());
-                    o.put("y", (float)c.getPosition().getY());
+                    o.put("x", (int)c.getPosition().getX());
+                    o.put("y", (int)c.getPosition().getY());
                     list.put(o);
 
                     System.out.println(c);
@@ -349,8 +349,8 @@ public class Connector extends Thread
            //     System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
                 System.out.println("Sending to client : "+json.toString());
 
-                json.put("path", list);
                 json.put("type", "path");
+                json.put("path", list);
 
                 if(args.length <= 4 || args[4].equals("1"))
                 {
