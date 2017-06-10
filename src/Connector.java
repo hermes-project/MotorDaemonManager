@@ -347,10 +347,11 @@ public class Connector extends Thread
                 }
 
            //     System.out.println("Sending to client : "+pathfeedback.toString().substring(0, pathfeedback.toString().length() - 1));
-                System.out.println("Sending to client : "+json.toString());
 
                 json.put("type", "path");
                 json.put("path", list);
+                
+                System.out.println("Sending to client : "+json.toString());
 
                 if(args.length <= 4 || args[4].equals("1"))
                 {
