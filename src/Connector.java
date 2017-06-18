@@ -299,7 +299,7 @@ public class Connector extends Thread
 
                 try {
                     astar.process(chemin);
-                } catch (libpf.exceptions.PathfindingException e) {
+                } catch (libpf.exceptions.PathfindingException | NullPointerException e) {
                     e.printStackTrace();
                     // TODO gestion
                 }
