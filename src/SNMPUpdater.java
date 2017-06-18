@@ -35,6 +35,15 @@ public class SNMPUpdater extends Thread
         posX = npos[0];
         posY = npos[1];
         angle = npos[2];
+
+        //#############TEMPORARY#################
+
+        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, npos[0]);
+        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, npos[1]);
+        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, npos[2]);
+
+        //#######################################
+
     }
 
     @Override
