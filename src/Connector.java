@@ -302,6 +302,7 @@ public class Connector extends Thread
                 } catch (libpf.exceptions.PathfindingException | NullPointerException e) {
                     e.printStackTrace();
                     // TODO gestion
+                    return true;
                 }
                 System.out.println("The computed path is :");
                 StringBuilder pathstr = new StringBuilder("followpath ");
