@@ -38,9 +38,9 @@ public class SNMPUpdater extends Thread
 
         //#############TEMPORARY#################
 
-        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, npos[0]);
-        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, npos[1]);
-        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, npos[2]);
+        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_X, Double.toString(npos[0]));
+        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.POS_Y, Double.toString(npos[1]));
+        SNMPWrapper.setValue(Manager.snmpAgent, MDMIB.ANGLE, Double.toString(npos[2]));
 
         //#######################################
 
