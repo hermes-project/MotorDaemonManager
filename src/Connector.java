@@ -57,6 +57,8 @@ public class Connector extends Thread
 
     public String name;
 
+    public static List<Obstacle> savedObstacles = new ArrayList<Obstacle>();
+
     Connector(boolean canOrder)
     {
         this.canOrder = canOrder;
@@ -301,6 +303,9 @@ public class Connector extends Thread
                 } catch (PathfindingException | NullPointerException e) {
                     e.printStackTrace();
                     // TODO gestion
+
+                    reloadContainer();
+
                     return true;
                 }
                 System.out.println("The computed path is :");
@@ -533,6 +538,17 @@ public class Connector extends Thread
         try {
             container.destructor(true);
             container = new Container(fixedObstacles);
+            savedObstacles = fixedObstacles;
+        } catch (ContainerException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized static void reloadContainer()
+    {
+        try {
+            container.destructor(true);
+            container = new Container(savedObstacles);
         } catch (ContainerException | InterruptedException e) {
             e.printStackTrace();
         }
