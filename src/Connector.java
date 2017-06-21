@@ -295,11 +295,10 @@ public class Connector extends Thread
                 Double[] actualPos = target.updater.getPos();
                 Cinematique depart = new Cinematique(actualPos[0], actualPos[1], actualPos[2], true, 0);
 
-                astar.initializeNewSearch(arrivee, true, depart);
-
                 try {
+                    astar.initializeNewSearch(arrivee, true, depart);
                     astar.process(chemin);
-                } catch (libpf.exceptions.PathfindingException | NullPointerException e) {
+                } catch (PathfindingException | NullPointerException e) {
                     e.printStackTrace();
                     // TODO gestion
                     return true;
@@ -368,7 +367,7 @@ public class Connector extends Thread
 
                 out.flush();
 
-            } catch (ContainerException | PathfindingException | InterruptedException | IOException e) {
+            } catch (ContainerException | InterruptedException | IOException e) {
                 e.printStackTrace();
             }
 
