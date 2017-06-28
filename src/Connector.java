@@ -27,7 +27,7 @@ public class Connector extends Thread
 {
     private final String mutex = "mutex";
 
-    private BufferedWriter out;
+    BufferedWriter out;
 
     private static final List<Obstacle> obstacles = new ArrayList<Obstacle>();
 
@@ -229,7 +229,7 @@ public class Connector extends Thread
         this.target = s;
     }
 
-    private boolean specialTreatment(String order)
+    boolean specialTreatment(String order)
     {
         if(!canOrder && !order.contains("MDSTATUS")) return false;
 
@@ -242,6 +242,22 @@ public class Connector extends Thread
             p[2] = target.updater.getPos()[2];
             target.updater.setPos(p);
             return false;
+        }
+        else if(order.contains("launchscript"))
+        {
+            String[] args = order.split(" ");
+
+            if(args.length < 2)
+            {
+                send("NO SCRIPT GIVEN\n");
+                return true;
+            }
+
+            if(!ScriptHandler.scriptLaunch(target, args[1]))
+            {
+                send("INTECHOS SEEMS DISCONNECTED\n");
+            }
+            return true;
         }
         else if(order.contains("setang"))
         {
@@ -470,7 +486,7 @@ public class Connector extends Thread
         synchronized (mutex)
         {
             try {
-                byte[] r = Arrays.copyOfRange(s.getBytes(), 0, 1024);
+                byte[] r = Arrays.copyOfRange(s.getBytes(), 0, 65556);
 
 
                 output.write(r);
