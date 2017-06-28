@@ -486,7 +486,7 @@ public class Connector extends Thread
         synchronized (mutex)
         {
             try {
-                byte[] r = Arrays.copyOfRange(s.getBytes(), 0, 65556);
+                byte[] r = Arrays.copyOfRange(s.getBytes(), 0, 65536);
 
 
                 output.write(r);
